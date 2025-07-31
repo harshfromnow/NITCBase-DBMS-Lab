@@ -19,5 +19,11 @@ int main(int argc, char *argv[]) {
   memcpy(message2, buffer2 + 20, 6);
   std::cout << message2;
 
+  /*Disk::readBlock(buffer, 0);
+  
+  for (int i=0; i<=10; ++i){
+    std::cout << (int)buffer[i] << " ";
+  }*/
+  
   return 0;
 }
