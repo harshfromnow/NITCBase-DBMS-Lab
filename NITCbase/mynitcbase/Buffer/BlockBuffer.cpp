@@ -15,10 +15,12 @@ RecBuffer::RecBuffer(int blockNum) : BlockBuffer::BlockBuffer(blockNum) {}
 
 // load the block header into the argument pointer
 int BlockBuffer::getHeader(struct HeadInfo *head) {
-  unsigned char buffer[BLOCK_SIZE];
-
-  // read the block at this.blockNum into the buffer
-  Disk::readBlock(buffer, this->blockNum);
+  // read the block at this.blockNum into a buffer
+	unsigned char *buffer;
+	// Disk::readBlock(buffer, this->blockNum);
+	int ret = loadBlockAndGetBufferPtr(&buffer);
+	if (ret != SUCCESS)
+		return ret;
 
   // populate the numEntries, numAttrs and numSlots fields in *head
   memcpy(&head->numSlots, buffer + 24, 4);
@@ -28,6 +30,40 @@ int BlockBuffer::getHeader(struct HeadInfo *head) {
   memcpy(&head->lblock, buffer + 8, 4);
 
   return SUCCESS;
+}
+
+
+/*
+Used to load a block to the buffer and get a pointer to it.
+NOTE: this function expects the caller to allocate memory for the argument (is this so?)
+	- in the function, it is simply pointing the buffer pointer to already alocated
+	memory, thus it does not require the memory allocated
+*/
+
+int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr)
+{
+	// check whether the block is already present in the buffer
+	// using StaticBuffer.getBufferNum()
+	int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
+	if (bufferNum == E_OUTOFBOUND)
+		return E_OUTOFBOUND;
+
+	if (bufferNum == E_BLOCKNOTINBUFFER)
+	{ // the block is not present in the buffer
+		bufferNum = StaticBuffer::getFreeBuffer(this->blockNum);
+
+		// no free space found in the buffer (currently)
+		// or some other error occurred in the process
+		if (bufferNum == E_OUTOFBOUND || bufferNum == FAILURE)
+			return FAILURE;
+
+		Disk::readBlock(StaticBuffer::blocks[bufferNum], this->blockNum);
+	}
+
+	// store the pointer to this buffer (blocks[bufferNum]) in *buffPtr
+	*buffPtr = StaticBuffer::blocks[bufferNum];
+
+	return SUCCESS;
 }
 
 // load the record at slotNum into the argument pointer
@@ -41,8 +77,11 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum) {
   int slotCount = head.numSlots;
 
   // read the block at this.blockNum into a buffer
-  unsigned char buffer[BLOCK_SIZE];
-  Disk::readBlock(buffer,this->blockNum);
+	unsigned char *buffer;
+	// Disk::readBlock(buffer, this->blockNum);
+	int ret = loadBlockAndGetBufferPtr(&buffer);
+	if (ret != SUCCESS)
+		return ret;
 
   /* record at slotNum will be at offset HEADER_SIZE + slotMapSize + (recordSize * slotNum)
      - each record will have size attrCount * ATTR_SIZE
@@ -67,8 +106,11 @@ int RecBuffer::setRecord(union Attribute *record, int slotNum)
     int slotCount = head.numSlots;
 
     // read the block at this.blockNum into a buffer
-    unsigned char buffer[BLOCK_SIZE];
-    Disk::readBlock(buffer, this->blockNum);
+	unsigned char *buffer;
+	// Disk::readBlock(buffer, this->blockNum);
+	int ret = loadBlockAndGetBufferPtr(&buffer);
+	if (ret != SUCCESS)
+		return ret;
 
     /* record at slotNum will be at offset HEADER_SIZE + slotMapSize + (recordSize * slotNum)
        - each record will have size attrCount * ATTR_SIZE

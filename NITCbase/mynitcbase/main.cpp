@@ -98,6 +98,7 @@ void updateAttributeName (const char* relName, const char* oldAttrName, const ch
 int main(int argc, char *argv[])
 {
 	Disk disk_run;
+  StaticBuffer buffer;
 
 	printAttributeCatalog();
 	//updateAttributeName ("Students", "Class", "Batch");
