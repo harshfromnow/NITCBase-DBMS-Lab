@@ -132,6 +132,35 @@ OpenRelTable::OpenRelTable()
     }
     AttrCacheTable::attrCache[ATTRCAT_RELID] = attrCacheHead2;
 
+    // student in attribute cache
+
+    RecBuffer studentAttrCatBlock(ATTRCAT_BLOCK);
+    Attribute studentAttrCatRecord[ATTRCAT_NO_ATTRS];
+
+    AttrCacheEntry *studentAttrCacheHead = nullptr;
+    AttrCacheEntry *studentAttrCachePrev = nullptr;
+
+    for (int i = 12; i <= 17; ++i)
+    {
+        AttrCacheEntry *attrCacheEntry3 = (AttrCacheEntry *)malloc(sizeof(AttrCacheEntry));
+        studentAttrCatBlock.getRecord(studentAttrCatRecord, i);
+        AttrCacheTable::recordToAttrCatEntry(studentAttrCatRecord, &attrCacheEntry3->attrCatEntry);
+        attrCacheEntry3->recId.block = ATTRCAT_BLOCK;
+        attrCacheEntry3->recId.slot = i;
+        attrCacheEntry3->next = nullptr;
+
+        if (studentAttrCachePrev)
+        {
+            studentAttrCachePrev->next = attrCacheEntry3;
+        }
+        else
+        {
+            studentAttrCacheHead = attrCacheEntry3;
+        }
+        studentAttrCachePrev = attrCacheEntry3;
+    }
+
+    AttrCacheTable::attrCache[2] = studentAttrCacheHead;
 }
 
 OpenRelTable::~OpenRelTable()
