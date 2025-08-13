@@ -163,6 +163,16 @@ OpenRelTable::OpenRelTable()
     AttrCacheTable::attrCache[2] = studentAttrCacheHead;
 }
 
+int OpenRelTable::getRelId(char relName[ATTR_SIZE]) {
+    if (strcmp(relName, RELCAT_RELNAME) == 0)
+        return RELCAT_RELID;
+    if (strcmp(relName, ATTRCAT_RELNAME) == 0)
+        return ATTRCAT_RELID;
+    if (strcmp(relName, "Students") == 0)
+        return 2;
+    return E_RELNOTOPEN;
+}
+
 OpenRelTable::~OpenRelTable()
 {
     // free all the memory that you allocated in the constructor
