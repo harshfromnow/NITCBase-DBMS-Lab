@@ -140,7 +140,7 @@ OpenRelTable::OpenRelTable()
     AttrCacheEntry *studentAttrCacheHead = nullptr;
     AttrCacheEntry *studentAttrCachePrev = nullptr;
 
-    for (int i = 12; i < 16; ++i)
+    for (int i = 12; i < 16; i++)
     {
         AttrCacheEntry *attrCacheEntry3 = (AttrCacheEntry *)malloc(sizeof(AttrCacheEntry));
         studentAttrCatBlock.getRecord(studentAttrCatRecord, i);
