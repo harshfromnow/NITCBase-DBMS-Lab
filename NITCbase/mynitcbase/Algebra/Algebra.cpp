@@ -25,7 +25,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
     // get the attribute catalog entry for attr, using AttrCacheTable::getAttrcatEntry()
     //    return E_ATTRNOTEXIST if it returns the error
 
-    int ret = AttrCacheTable::getAttrCatEntry(srcRelId, attr, &attrCatEntry); // fix this
+    int ret = AttrCacheTable::getAttrCatEntry(srcRelId, attr, &attrCatEntry);
 
     if (ret == E_ATTRNOTEXIST)
         return ret;
