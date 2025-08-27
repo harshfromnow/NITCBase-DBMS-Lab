@@ -4,7 +4,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-bool isNumber(char *str);
+bool isNumber(char *str)
+{
+    int len;
+    float ignore;
+    /*
+      sscanf returns the number of elements read, so if there is no float matching
+      the first %f, ret will be 0, else it'll be 1
+
+      %n gets the number of characters read. this scanf sequence will read the
+      first float ignoring all the whitespace before and after. and the number of
+      characters read that far will be stored in len. if len == strlen(str), then
+      the string only contains a float with/without whitespace. else, there's other
+      characters.
+    */
+    int ret = sscanf(str, "%f %n", &ignore, &len);
+    return ret == 1 && len == strlen(str);
+}
 
 /* used to select all the records that satisfy a condition.
 the arguments of the function are
@@ -97,23 +113,59 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
     return SUCCESS;
 }
 
-bool isNumber(char *str)
+int Algebra::insert(char relName[ATTR_SIZE], int nAttrs, char record[][ATTR_SIZE])
 {
-    int len;
-    float ignore;
 
+    if (strcmp(relName, RELCAT_RELNAME) == 0 || strcmp(relName, ATTRCAT_RELNAME) == 0)
+    {
+        return E_NOTPERMITTED;
+    }
+
+    // get the relation's rel-id using OpenRelTable::getRelId() method
+    int relId = OpenRelTable::getRelId(relName);
+
+    // if relation is not open in open relation table, return E_RELNOTOPEN
+    if (relId == E_RELNOTOPEN)
+    {
+        return E_RELNOTOPEN;
+    }
+    // get the relation catalog entry from relation cache
+    RelCatEntry relCatEntry;
+    RelCacheTable::getRelCatEntry(relId, &relCatEntry);
+
+    if (nAttrs != relCatEntry.numAttrs)
+    {
+        return E_NATTRMISMATCH;
+    }
+
+    // let recordValues[numberOfAttributes] be an array of type union Attribute
+    Attribute recordValues[relCatEntry.numAttrs];
     /*
-    sscanf returns the number of elements read, so if there is no float matching
-    the first %f, ret will be 0, else it'll be 1
+        Converting 2D char array of record values to Attribute array recordValues
+     */
+    for (int i = 0; i < nAttrs; i++)
+    {
+        AttrCatEntry attrCatEntry;
+        AttrCacheTable::getAttrCatEntry(relId, i, &attrCatEntry);
 
-    %n gets the number of characters read. this scanf sequence will read the
-    first float ignoring all the whitespace before and after. and the number of
-    characters read that far will be stored in len. if len == strlen(str), then
-    the string only contains a float with/without whitespace. else, there's other
-    characters.
-  */
+        int type = attrCatEntry.attrType;
+        if (type == NUMBER)
+        {
+            // if the char array record[i] can be converted to a number
+            // (check this using isNumber() function)
+            if (isNumber(record[i]))
+            {
+                recordValues[i].nVal = atof(record[i]);
+            }
+            else
+                return E_ATTRTYPEMISMATCH;
+        }
+        else if (type == STRING)
+        {
+            strcpy(recordValues[i].sVal, record[i]);
+        }
+    }
 
-    int ret = sscanf(str, " %f %n", &ignore, &len);
-
-    return ret == 1 && len == strlen(str);
+    int retVal = BlockAccess::insert(relId, recordValues);
+    return retVal;
 }
