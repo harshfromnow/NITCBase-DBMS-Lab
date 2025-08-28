@@ -393,3 +393,27 @@ int BlockAccess::insert(int relId, Attribute *record)
     RelCacheTable::setRelCatEntry(relId, &relCatEntry);
     return SUCCESS;
 }
+
+/*
+NOTE: This function will copy the result of the search to the `record` argument.
+      The caller should ensure that space is allocated for `record` array
+      based on the number of attributes in the relation.
+*/
+int BlockAccess::search(int relId, Attribute *record, char attrName[ATTR_SIZE], Attribute attrVal, int op)
+{
+    /* search for the record id (recid) corresponding to the attribute with
+    attribute name attrName, with value attrval and satisfying the condition op
+    using linearSearch() */
+
+    RecId recId;
+    recId = linearSearch(relId, attrName, attrVal, op);
+
+    if (recId.slot == -1 && recId.block == -1)
+        return E_NOTFOUND;
+
+    // Fetch the required record
+    RecBuffer block(recId.block);
+    block.getRecord(record, recId.slot);
+
+    return SUCCESS;
+}

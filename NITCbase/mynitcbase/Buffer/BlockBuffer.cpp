@@ -315,6 +315,22 @@ int BlockBuffer::getBlockNum(){
   return this->blockNum;
 }
 
+void BlockBuffer::releaseBlock(){
+
+  // if blockNum is INVALID_BLOCKNUM (-1), or it is invalidated already, do nothing
+  if ( this->blockNum == INVALID_BLOCKNUM || StaticBuffer::blockAllocMap[this->blockNum] == UNUSED_BLK) return;
+
+  // Try to get the buffer number if block is loaded in 
+  int buffNum = StaticBuffer::getBufferNum(this->blockNum);
+  if ( buffNum != E_BLOCKNOTINBUFFER ){
+    StaticBuffer::metainfo[buffNum].free = true;
+  }
+
+  // Indicate block is free in block allocation map 
+  StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
+  this->blockNum = -1;
+}
+
 int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType)
 {
   int diff;
