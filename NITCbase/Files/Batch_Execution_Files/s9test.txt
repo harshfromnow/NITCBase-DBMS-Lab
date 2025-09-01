@@ -1,0 +1,8 @@
+CREATE TABLE Toys(id NUM, name STR, colour STR, stock NUM);
+OPEN TABLE Toys;
+INSERT INTO Toys VALUES FROM toys.csv;
+SELECT name,colour FROM Toys INTO ToyColours;
+SELECT * FROM Toys INTO ToysForSale WHERE stock > 3000;
+SELECT * FROM Toys INTO ToysToReorder WHERE stock <= 1000;
+SELECT * FROM Toys INTO ToysCopy;
+SELECT id,name FROM Toys INTO BlueToys WHERE colour = blue;

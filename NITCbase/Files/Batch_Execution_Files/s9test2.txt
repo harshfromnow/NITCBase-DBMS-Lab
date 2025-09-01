@@ -1,0 +1,10 @@
+CREATE TABLE QuizMarks(rollNo STR, name STR, cgpa NUM, quizMarks NUM, location STR);
+OPEN TABLE QuizMarks;
+INSERT INTO QuizMarks VALUES FROM quizmarks.csv;
+SELECT * FROM QuizMarks INTO QuizMarksCG WHERE cgpa > 8;
+OPEN TABLE QuizMarksCG;
+SELECT * FROM QuizMarksCG INTO Scholars WHERE quizMarks > 85;
+OPEN TABLE Scholars;
+SELECT rollNo,name FROM Scholars INTO KeralaScholars WHERE location = Kerala;
+SELECT rollNo,name FROM Scholars INTO GujaratScholars WHERE location = Gujarat;
+SELECT rollNo,name FROM Scholars INTO TelScholars WHERE location = Telangana;
