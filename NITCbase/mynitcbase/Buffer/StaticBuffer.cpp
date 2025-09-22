@@ -128,3 +128,13 @@ int StaticBuffer::setDirtyBit(int blockNum)
 
 	return SUCCESS;
 }
+
+// Returns the block type of the block corresponding to the input block number
+// This function is used to find the block type without the creation of a block object
+int StaticBuffer::getStaticBlockType(int blockNum){
+  // Check if blockNum is valid (non zero and less than number of disk blocks)
+  if (blockNum < 0 || blockNum > DISK_BLOCKS) return E_OUTOFBOUND;
+
+  // Access the entry in block allocation map corresponding to the blockNum argument
+  return (int)blockAllocMap[blockNum];
+}

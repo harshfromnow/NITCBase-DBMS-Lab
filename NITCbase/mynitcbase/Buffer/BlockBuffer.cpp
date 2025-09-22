@@ -311,24 +311,109 @@ int BlockBuffer::setBlockType(int blockType)
   return SUCCESS;
 }
 
-int BlockBuffer::getBlockNum(){
+int BlockBuffer::getBlockNum()
+{
   return this->blockNum;
 }
 
-void BlockBuffer::releaseBlock(){
+void BlockBuffer::releaseBlock()
+{
 
   // if blockNum is INVALID_BLOCKNUM (-1), or it is invalidated already, do nothing
-  if ( this->blockNum == INVALID_BLOCKNUM || StaticBuffer::blockAllocMap[this->blockNum] == UNUSED_BLK) return;
+  if (this->blockNum == INVALID_BLOCKNUM || StaticBuffer::blockAllocMap[this->blockNum] == UNUSED_BLK)
+    return;
 
-  // Try to get the buffer number if block is loaded in 
+  // Try to get the buffer number if block is loaded in
   int buffNum = StaticBuffer::getBufferNum(this->blockNum);
-  if ( buffNum != E_BLOCKNOTINBUFFER ){
+  if (buffNum != E_BLOCKNOTINBUFFER)
+  {
     StaticBuffer::metainfo[buffNum].free = true;
   }
 
-  // Indicate block is free in block allocation map 
+  // Indicate block is free in block allocation map
   StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
   this->blockNum = -1;
+}
+
+// call the corresponding parent constructor - new index block allocated to disk
+IndBuffer::IndBuffer(char blockType) : BlockBuffer(blockType) {}
+
+// call the corresponding parent constructor - load a block already initialised as disk block
+IndBuffer::IndBuffer(int blockNum) : BlockBuffer(blockNum) {}
+
+// new ind internal block allocated to disk
+IndInternal::IndInternal() : IndBuffer('I') {}
+
+// load block
+IndInternal::IndInternal(int blockNum) : IndBuffer(blockNum) {}
+
+// new leaf index block
+IndLeaf::IndLeaf() : IndBuffer('L') {}
+
+// load block - this is the way to call parent non-default constructor.
+IndLeaf::IndLeaf(int blockNum) : IndBuffer(blockNum) {}
+
+// Gives the indexNumth entry of the block.
+int IndInternal::getEntry(void *ptr, int indexNum)
+{
+  if (indexNum < 0 || indexNum >= MAX_KEYS_INTERNAL)
+    return E_OUTOFBOUND;
+
+  unsigned char *bufferPtr;
+  int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+  if (ret != SUCCESS)
+    return ret;
+
+  // typecast the void pointer to an internal entry pointer
+  struct InternalEntry *internalEntry = (struct InternalEntry *)ptr;
+
+  /*
+  - copy the entries from the indexNum`th entry to *internalEntry
+  - make sure that each field is copied individually as in the following code
+  - the lChild and rChild fields of InternalEntry are of type int32_t
+  - int32_t is a type of int that is guaranteed to be 4 bytes across every
+    C++ implementation. sizeof(int32_t) = 4
+  */
+
+  /* the indexNum'th entry will begin at an offset of
+     HEADER_SIZE + (indexNum * (sizeof(int) + ATTR_SIZE) )        
+     from bufferPtr */
+  unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * 20);
+
+  memcpy(&(internalEntry->lChild), entryPtr, sizeof(int32_t));
+  memcpy(&(internalEntry->attrVal), entryPtr + 4, sizeof(Attribute));
+  memcpy(&(internalEntry->rChild), entryPtr + 20, 4);
+
+  return SUCCESS;
+}
+
+int IndLeaf::getEntry(void *ptr, int indexNum)
+{
+
+  if ( indexNum < 0 || indexNum >= MAX_KEYS_INTERNAL ) return E_OUTOFBOUND;
+
+  unsigned char *bufferPtr;
+  int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+  if ( ret != SUCCESS ) return ret;
+
+  // copy the indexNum'th Index entry in buffer to memory ptr using memcpy
+
+  /* the indexNum'th entry will begin at an offset of
+     HEADER_SIZE + (indexNum * LEAF_ENTRY_SIZE)  from bufferPtr */
+  unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * LEAF_ENTRY_SIZE);
+  memcpy((struct Index *)ptr, entryPtr, LEAF_ENTRY_SIZE);
+
+  return SUCCESS;
+}
+
+int IndInternal::setEntry(void *ptr, int indexNum)
+{
+  return 0;
+}
+
+int IndLeaf::setEntry(void *ptr, int indexNum)
+{
+  return 0;
 }
 
 int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType)
