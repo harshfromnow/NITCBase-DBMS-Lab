@@ -314,9 +314,24 @@ int OpenRelTable::closeRel(int relId)
 
   /****** Releasing the Attribute Cache entry of the relation ******/
 
-  // (because we are not modifying the attribute cache at this stage,
-  // write-back is not required. We will do it in subsequent
-  // stages when it becomes needed)
+  for (AttrCacheEntry *curEntry = AttrCacheTable::attrCache[relId];
+       curEntry != nullptr;
+       curEntry = curEntry->next)
+  {
+    if (curEntry->dirty == true):
+      {
+        //get the attrCatEntry
+        AttrCatEntry attrCatEntry = curEntry->attrCatEntry;
+        union Attribute record[ATTRCAT_NO_ATTRS];
+
+        // Convert into record from struct to write back
+        AttrCacheTable::attrCatEntryToRecord(&attrCatEntry, record);
+
+        // Write back to buffer from cache
+        RecBuffer attrCatBlk(curEntry->recId.block);
+        attrCatBlk.setRecord(record, curEntry->recId.slot);
+      }
+  }
 
   // free the memory allocated in the relation and attribute caches which was
   // allocated in the OpenRelTable::openRel() function
@@ -328,22 +343,26 @@ int OpenRelTable::closeRel(int relId)
   return SUCCESS;
 }
 
-OpenRelTable::~OpenRelTable() {
+OpenRelTable::~OpenRelTable()
+{
 
   // close all open relations from rel-id = 2 onwards.
-  for (int i = 2; i < MAX_OPEN; ++i) {
-    if (!tableMetaInfo[i].free) {
+  for (int i = 2; i < MAX_OPEN; ++i)
+  {
+    if (!tableMetaInfo[i].free)
+    {
       OpenRelTable::closeRel(i);
     }
   }
   /**** Closing the catalog relations in the relation cache ****/
-  
-  //releasing the relation cache entry of the attribute catalog
-  if ( RelCacheTable::relCache[ATTRCAT_RELID]->dirty == true ) {
+
+  // releasing the relation cache entry of the attribute catalog
+  if (RelCacheTable::relCache[ATTRCAT_RELID]->dirty == true)
+  {
 
     Attribute attrCatInRelCatRecord[RELCAT_NO_ATTRS];
     RelCacheTable::relCatEntryToRecord(&RelCacheTable::relCache[ATTRCAT_RELID]->relCatEntry,
-                                        attrCatInRelCatRecord);
+                                       attrCatInRelCatRecord);
 
     // declaring an object of RecBuffer class to write back to the buffer
     RecId recId = RelCacheTable::relCache[ATTRCAT_RELID]->recId;
@@ -355,12 +374,13 @@ OpenRelTable::~OpenRelTable() {
   // free the memory dynamically allocated to this RelCacheEntry
   free(RelCacheTable::relCache[ATTRCAT_RELID]);
 
-  //releasing the relation cache entry of the relation catalog
-  if( RelCacheTable::relCache[RELCAT_RELID]->dirty == true ) {
+  // releasing the relation cache entry of the relation catalog
+  if (RelCacheTable::relCache[RELCAT_RELID]->dirty == true)
+  {
 
     Attribute relCatInRelCatRecord[RELCAT_NO_ATTRS];
     RelCacheTable::relCatEntryToRecord(&RelCacheTable::relCache[RELCAT_RELID]->relCatEntry,
-                                        relCatInRelCatRecord);
+                                       relCatInRelCatRecord);
 
     RecId recId = RelCacheTable::relCache[RELCAT_RELID]->recId;
     // declaring an object of RecBuffer class to write back to the buffer
