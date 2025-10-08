@@ -147,7 +147,7 @@ int Schema::createRel(char relName[], int nAttrs, char attrs[][ATTR_SIZE], int a
   return SUCCESS;
 }
 
-int createIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE])
+int Schema::createIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE])
 {
   if (strcmp(relName, RELCAT_RELNAME) == 0 || strcmp(relName, ATTRCAT_RELNAME) == 0)
   {
