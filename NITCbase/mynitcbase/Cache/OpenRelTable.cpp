@@ -318,19 +318,19 @@ int OpenRelTable::closeRel(int relId)
        curEntry != nullptr;
        curEntry = curEntry->next)
   {
-    if (curEntry->dirty == true):
-      {
-        //get the attrCatEntry
-        AttrCatEntry attrCatEntry = curEntry->attrCatEntry;
-        union Attribute record[ATTRCAT_NO_ATTRS];
+    if (curEntry->dirty == true)
+    {
+      // get the attrCatEntry
+      AttrCatEntry attrCatEntry = curEntry->attrCatEntry;
+      union Attribute record[ATTRCAT_NO_ATTRS];
 
-        // Convert into record from struct to write back
-        AttrCacheTable::attrCatEntryToRecord(&attrCatEntry, record);
+      // Convert into record from struct to write back
+      AttrCacheTable::attrCatEntryToRecord(&attrCatEntry, record);
 
-        // Write back to buffer from cache
-        RecBuffer attrCatBlk(curEntry->recId.block);
-        attrCatBlk.setRecord(record, curEntry->recId.slot);
-      }
+      // Write back to buffer from cache
+      RecBuffer attrCatBlk(curEntry->recId.block);
+      attrCatBlk.setRecord(record, curEntry->recId.slot);
+    }
   }
 
   // free the memory allocated in the relation and attribute caches which was

@@ -414,7 +414,6 @@ int IndInternal::setEntry(void *ptr, int indexNum)
     return E_OUTOFBOUND;
 
   unsigned char *bufferPtr;
-  unsigned char *bufferPtr;
   int ret = loadBlockAndGetBufferPtr(&bufferPtr);
   if (ret != SUCCESS)
     return ret;

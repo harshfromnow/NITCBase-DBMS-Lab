@@ -439,7 +439,7 @@ int BlockAccess::insert(int relId, Attribute *record)
         {
             /* insert the new record into the attribute's bplus tree using
              BPlusTree::bPlusInsert()*/
-            int retVal = BPlusTree::bPlusInsert(relId, attrCatEntry.attrName,
+            int retVal = BPlusTree::bPlusInsert(relId, attrCatBuf.attrName,
                                                 record[attrOffset], rec_id);
 
             if (retVal == E_DISKFULL)
