@@ -1,0 +1,52 @@
+echo ---- Creating Required tables and Populating ------
+create table Events(id NUM, title STR, location STR);
+create table Locations(name STR, capacity NUM);
+create table Participants(regNo NUM, event STR);
+open table Events;
+open table Locations;
+open table Participants;
+insert into Events values from events.csv
+insert into Participants values from participants.csv
+insert into Locations values from locations.csv
+echo 
+echo ---- Question 1 Sub part 1 ------
+select name from Locations join Events into EventLocations where Locations.name = Events.location
+echo 
+echo ---- Question 1 Sub part 2 ------
+select * from Events into AudiEvents where location = Audi
+open table AudiEvents;
+select regNo, event from Participants join AudiEvents into AudiPeople where Participants.event = AudiEvents.title;
+close table AudiEvents;
+drop table AudiEvents;
+echo 
+echo ---- Question 1 Sub part 3 ------
+select * from Locations into t1 where capacity > 100;
+open table t1;
+select * from t1 into t2 where capacity < 200;
+open table t2;
+select * from Events join t2 into t3 where Events.location =  t2.name;
+open table t3;
+select regNo, event from Participants join t3 into MiniEventPeople where Participants.event = t3.title;
+close table t1;
+close table t2;
+close table t3;
+drop table t1;
+drop table t2;
+drop table t3;
+echo 
+echo ---- Question 3 Sub part 1 ------
+create table Organizers(name STR, eventId NUM);
+open table Organizers;
+insert into Organizers values from organizers.csv
+select * from Participants join Events into t1 where Participants.event = Events.title;
+open table t1;
+select * from Organizers join t1 into t2 where Organizers.eventId = t1.id;
+open table t2;
+select regNo, name, location from t2 into POL;
+echo 
+echo ---- Question 3 Sub part 2 ------
+select regNo, event from t2 into ThomasRel where name = Thomas;
+close table t1;
+close table t2;
+drop table t1;
+drop table t2;
